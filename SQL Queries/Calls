@@ -1,0 +1,82 @@
+SELECT
+	datetime(intents.start_date, 'UNIXEPOCH') as "Timestamp",
+	COALESCE((
+        SELECT 
+            CASE 
+				WHEN intents.direction = '0' AND intents.donated_by_siri = '1' THEN entities.tokens
+                WHEN intents.direction = '1' THEN entities.tokens
+                ELSE 'Owner'
+            END
+        FROM intent_entities
+        JOIN parameter_names ON parameter_names.id = intent_entities.parameter_name_id
+        JOIN entities ON entities.id = intent_entities.entity_id
+        WHERE
+            intent_entities.intent_id = intents.id
+            AND parameter_names.name = 'contacts'
+    ), 'Owner') as "Recipient",
+    COALESCE((
+        SELECT 
+            CASE 
+				WHEN intents.direction = '0' AND intents.donated_by_siri = '1' THEN entities.uuid
+                WHEN intents.direction = '1' THEN entities.uuid
+                ELSE 'Owner'
+            END
+        FROM intent_entities
+        JOIN parameter_names ON parameter_names.id = intent_entities.parameter_name_id
+        JOIN entities ON entities.id = intent_entities.entity_id
+        WHERE
+            intent_entities.intent_id = intents.id
+            AND parameter_names.name = 'contactHandles'
+    ), 'Owner') as "Recipient Handle",
+    COALESCE((
+        SELECT 
+            CASE 
+                WHEN intents.direction = '2' THEN entities.tokens
+                ELSE 'Owner'
+            END
+        FROM intent_entities
+        JOIN parameter_names ON parameter_names.id = intent_entities.parameter_name_id
+        JOIN entities ON entities.id = intent_entities.entity_id
+        WHERE
+            intent_entities.intent_id = intents.id
+            AND parameter_names.name = 'contacts'
+    ), 'Owner') as "Sender",
+    COALESCE((
+        SELECT 
+            CASE 
+                WHEN intents.direction = '2' THEN entities.uuid
+                ELSE 'Owner'
+            END
+        FROM intent_entities
+        JOIN parameter_names ON parameter_names.id = intent_entities.parameter_name_id
+        JOIN entities ON entities.id = intent_entities.entity_id
+        WHERE
+            intent_entities.intent_id = intents.id
+            AND parameter_names.name = 'contactHandles'
+    ), 'Owner') as "Sender Handle",
+    CASE 
+        WHEN intents.direction = '1' THEN 'Outgoing'
+        WHEN intents.direction = '2' THEN 'Incoming'
+		WHEN intents.direction = '0' AND intents.donated_by_siri = '1' THEN 'Outgoing'
+    END as "Direction",
+	CASE 
+		WHEN intents.duration_seconds = '0' THEN 'Not Answered or Missed'
+		ELSE strftime('%H:%M:%S', intents.duration_seconds, 'unixepoch')
+	END as "Duration",
+	CASE
+		WHEN intents.donated_by_siri = '0' THEN 'No'
+		WHEN intents.donated_by_siri = '1' THEN 'Yes'
+	END as "Donated by Siri",
+    apps.bundle_id as "Application Bundle ID",
+	SUBSTR(intents.dkevent_uuid, INSTR(intents.dkevent_uuid, ':') + 1) as "Application UUID",
+    domains.name as "Domain ID",
+    verbs.name as "Verb ID",
+    intents.id as "Intents ID",
+    intents.uuid as "Intents UUID"
+    FROM intents
+    LEFT OUTER JOIN domains ON domains.id = intents.domain_id
+    LEFT OUTER JOIN verbs ON verbs.id = intents.verb_id
+    LEFT OUTER JOIN apps ON apps.id = intents.app_id
+    LEFT OUTER JOIN groups ON groups.id = intents.group_id
+    WHERE domains.name = "Calls"
+    GROUP BY intents.uuid;
