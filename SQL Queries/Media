@@ -1,0 +1,31 @@
+SELECT
+	datetime(intents.start_date, 'UNIXEPOCH') as "Timestamp",
+	CASE
+		WHEN entities.tokens like '%mediatype%' or entities.tokens like '% zzz%' THEN
+			CASE 
+				WHEN entity_types.name = 'MediaSearchItem'
+					THEN SUBSTR(entities.tokens, 1, INSTR(entities.tokens, 'mediatype') - 1)
+				WHEN entity_types.name = 'INMediaItem'
+					THEN SUBSTR(entities.tokens, 1, INSTR(entities.tokens, ' zzz') - 1)
+				END
+		ELSE entities.tokens
+	END AS "Media",
+    apps.bundle_id as "Application Bundle ID",
+	CASE
+		WHEN intents.donated_by_siri = '0' THEN 'No'
+		WHEN intents.donated_by_siri = '1' THEN 'Yes'
+	END as "Donated by Siri",
+	SUBSTR(intents.dkevent_uuid, INSTR(intents.dkevent_uuid, ':') + 1) as "Application UUID",
+    domains.name as "Domain ID",
+    verbs.name as "Verb ID",
+    intents.id as "Intents ID",
+    intents.uuid as "Intents UUID"
+    FROM intents
+    LEFT OUTER JOIN domains ON domains.id = intents.domain_id
+    LEFT OUTER JOIN verbs ON verbs.id = intents.verb_id
+    LEFT OUTER JOIN apps ON apps.id = intents.app_id
+    LEFT OUTER JOIN group_entities on group_entities.group_id = intents.group_id
+    LEFT OUTER JOIN entities on entities.id = group_entities.entity_id
+    LEFT OUTER JOIN entity_types on entity_types.id = entities.type_id
+    WHERE domains.name = 'Media'
+    GROUP BY intents.uuid;
