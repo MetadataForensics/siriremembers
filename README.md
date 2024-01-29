@@ -5,4 +5,4 @@ SQL queries for parsing the siriremembers.sqlite3 database found in Apple device
 The siriremembers.sqlite3 database is stored at /private/var/mobile/Library/com.apple.siri.inference/siriremembers.sqlite3
 
 # More Details
-Additional information can be found here: http://metadataperspective.com/2023/12/11/siris-memory-lane-exploring-the-siriremembers-database/
+Additional information can be found here: https://metadataperspective.com/2024/01/29/siris-memory-lane-exploring-the-siriremembers-database/
