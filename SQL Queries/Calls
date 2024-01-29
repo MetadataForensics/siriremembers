@@ -79,4 +79,4 @@ SELECT
     LEFT OUTER JOIN apps ON apps.id = intents.app_id
     LEFT OUTER JOIN groups ON groups.id = intents.group_id
     WHERE domains.name = "Calls"
-    
+    GROUP BY intents.uuid;
