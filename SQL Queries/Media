@@ -1,4 +1,4 @@
-
+SELECT
 	datetime(intents.start_date, 'UNIXEPOCH') as "Timestamp",
 	CASE
 		WHEN entities.tokens like '%mediatype%' or entities.tokens like '% zzz%' THEN
